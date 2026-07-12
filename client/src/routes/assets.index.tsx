@@ -72,9 +72,8 @@ function AssetDirectory() {
         purchaseDate: a.acquisitionDate ? new Date(a.acquisitionDate).toLocaleDateString() : "",
         shared: a.isBookable,
         image: a.category?.name?.includes("Mobile") ? "📱" :
-               a.category?.name?.includes("Monitor") ? "🖥️" :
-               a.category?.name?.includes("Furniture") ? "🪑" : "💻",
-        maintenanceRequests: a.maintenanceRequests ?? [],
+          a.category?.name?.includes("Monitor") ? "🖥️" :
+            a.category?.name?.includes("Furniture") ? "🪑" : "💻",
       };
     });
   }, [dbAssets]);
@@ -381,7 +380,7 @@ function AssetDirectory() {
                             )}
                           </div>
                         )}
-                        
+
                         <div className="text-[10px] text-muted-foreground flex items-center gap-1 pt-1 justify-between">
                           <span>Raised by: <strong>{req.raisedBy?.name || "Unknown"}</strong></span>
                           <span>Last updated: {new Date(req.updatedAt).toLocaleDateString()}</span>

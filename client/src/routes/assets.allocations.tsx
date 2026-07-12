@@ -39,6 +39,206 @@ const timeline = [
 ];
 
 function Allocations() {
+<<<<<<< Updated upstream
+=======
+  const queryClient = useQueryClient();
+  const currentUser = getCurrentUser();
+  const canManage = currentUser?.role === "ADMIN" || currentUser?.role === "ASSET_MANAGER";
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Dialog open states
+  const [isAllocateOpen, setIsAllocateOpen] = useState(false);
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [isReturnOpen, setIsReturnOpen] = useState(false);
+
+  // Form states
+  const [allocAssetId, setAllocAssetId] = useState("");
+  const [allocUserId, setAllocUserId] = useState("");
+  const [allocReturnDate, setAllocReturnDate] = useState("");
+
+  const [transAllocId, setTransAllocId] = useState("");
+  const [transUserId, setTransUserId] = useState("");
+
+  const [returnAllocId, setReturnAllocId] = useState("");
+  const [returnNotes, setReturnNotes] = useState("");
+
+  // Queries
+  const { data: dbAllocations = [] } = useQuery({
+    queryKey: ["allocations"],
+    queryFn: () => getAllocations(),
+  });
+
+  const { data: dbTransfers = [] } = useQuery({
+    queryKey: ["transfers"],
+    queryFn: () => getTransfers(),
+  });
+
+  const { data: dbAssets = [] } = useQuery({
+    queryKey: ["assets"],
+    queryFn: () => getAssets(),
+  });
+
+  const { data: dbUsers = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => getUsers(),
+  });
+
+  // Mutations
+  const allocateMutation = useMutation({
+    mutationFn: createAllocation,
+    onSuccess: () => {
+      toast.success("Asset allocated successfully");
+      queryClient.invalidateQueries({ queryKey: ["allocations"] });
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      setIsAllocateOpen(false);
+      setAllocAssetId("");
+      setAllocUserId("");
+      setAllocReturnDate("");
+    },
+    onError: (err: any) => {
+      toast.error("Allocation failed", { description: err.message });
+    },
+  });
+
+  const transferMutation = useMutation({
+    mutationFn: requestTransfer,
+    onSuccess: () => {
+      toast.success("Transfer request submitted successfully");
+      queryClient.invalidateQueries({ queryKey: ["transfers"] });
+      setIsTransferOpen(false);
+      setTransAllocId("");
+      setTransUserId("");
+    },
+    onError: (err: any) => {
+      toast.error("Transfer failed", { description: err.message });
+    },
+  });
+
+  const returnMutation = useMutation({
+    mutationFn: requestReturn,
+    onSuccess: () => {
+      toast.success("Return request submitted successfully");
+      queryClient.invalidateQueries({ queryKey: ["allocations"] });
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      setIsReturnOpen(false);
+      setReturnAllocId("");
+    },
+    onError: (err: any) => {
+      toast.error("Return request failed", { description: err.message });
+    },
+  });
+
+  const processTransferMutation = useMutation({
+    mutationFn: ({ id, action }: { id: string; action: "APPROVE" | "REJECT" }) => processTransfer(id, action),
+    onSuccess: (_, variables) => {
+      toast.success(`Transfer request ${variables.action.toLowerCase()}d`);
+      queryClient.invalidateQueries({ queryKey: ["transfers"] });
+      queryClient.invalidateQueries({ queryKey: ["allocations"] });
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+    },
+    onError: (err: any) => {
+      toast.error("Action failed", { description: err.message });
+    },
+  });
+
+  const processReturnMutation = useMutation({
+    mutationFn: ({ id, checkInNotes }: { id: string; checkInNotes?: string }) => completeReturn(id, checkInNotes),
+    onSuccess: () => {
+      toast.success("Return request approved and asset checked-in");
+      queryClient.invalidateQueries({ queryKey: ["allocations"] });
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+    },
+    onError: (err: any) => {
+      toast.error("Action failed", { description: err.message });
+    },
+  });
+
+  // Derived lists
+  const availableAssets = useMemo(() => {
+    return dbAssets.filter((a) => a.status === "AVAILABLE");
+  }, [dbAssets]);
+
+  const activeAllocations = useMemo(() => {
+    return dbAllocations.filter((a) => a.status === "ACTIVE" || a.status === "RETURN_REQUESTED");
+  }, [dbAllocations]);
+
+  const combinedRequests = useMemo(() => {
+    const list: any[] = [];
+
+    // Transfer requests - show as moving from current holder to new owner
+    dbTransfers.forEach((t) => {
+      list.push({
+        id: t.id,
+        dbId: t.id,
+        type: "Transfer",
+        asset: t.allocation?.asset?.name ?? "Unknown Asset",
+        tag: t.allocation?.asset?.assetTag ?? "N/A",
+        from: t.allocation?.user?.name ?? "N/A",
+        to: t.targetUser?.name ?? "N/A",
+        dept: "HQ - Operations",
+        status: t.status.toLowerCase(), // "requested", "approved", "rejected"
+        raised: new Date(t.createdAt).toLocaleDateString(),
+        expectedReturnDate: t.allocation?.expectedReturnDate,
+        raw: t,
+      });
+    });
+
+    // Allocations showing return requests or active assignments
+    // Filter out RETURNED allocations (fully back in inventory)
+    dbAllocations.forEach((a) => {
+      if (a.status === "RETURN_REQUESTED" || a.status === "ACTIVE") {
+        list.push({
+          id: a.id,
+          dbId: a.id,
+          type: a.status === "RETURN_REQUESTED" ? "Return" : "Allocate",
+          asset: a.asset?.name ?? "Unknown Asset",
+          tag: a.asset?.assetTag ?? "N/A",
+          from: "Inventory",
+          to: a.user?.name ?? "N/A",
+          dept: a.asset?.location ?? "HQ - Storage",
+          status: a.status === "RETURN_REQUESTED" ? "pending" : a.status.toLowerCase(),
+          raised: new Date(a.createdAt).toLocaleDateString(),
+          expectedReturnDate: a.expectedReturnDate,
+          raw: a,
+        });
+      }
+    });
+
+    return list;
+  }, [dbAllocations, dbTransfers]);
+
+  const current = useMemo(() => {
+    if (combinedRequests.length === 0) return null;
+    return combinedRequests.find((r) => r.id === selectedId) || combinedRequests[0];
+  }, [combinedRequests, selectedId]);
+
+  const timeline = useMemo(() => {
+    if (!current) return [];
+    
+    const steps: any[] = [];
+    if (current.type === "Transfer") {
+      steps.push({ icon: Plus, label: "Transfer request raised", by: current.from, time: current.raised, color: "text-primary bg-primary/10" });
+      if (current.status === "approved") {
+        steps.push({ icon: CheckCircle2, label: "Transfer approved", by: current.raw.approvedBy?.name ?? "Manager", time: "Processed", color: "text-success bg-success/10" });
+      } else if (current.status === "rejected") {
+        steps.push({ icon: XCircle, label: "Transfer rejected", by: current.raw.approvedBy?.name ?? "Manager", time: "Processed", color: "text-destructive bg-destructive/10" });
+      } else {
+        steps.push({ icon: Clock, label: "Waiting for Manager approval", by: "Asset Ops", time: "Now", color: "text-warning bg-warning/15" });
+      }
+    } else if (current.type === "Return") {
+      steps.push({ icon: RotateCw, label: "Return requested", by: current.to, time: current.raised, color: "text-warning bg-warning/10" });
+      if (current.raw.status === "RETURNED") {
+        steps.push({ icon: CheckCircle2, label: "Return completed & verified", by: "Manager", time: "Checked-in", color: "text-success bg-success/10" });
+      } else {
+        steps.push({ icon: Clock, label: "Pending physical hand-over", by: "IT Warehouse", time: "Now", color: "text-warning bg-warning/15" });
+      }
+    } else {
+      steps.push({ icon: PackageCheck, label: "Allocation active", by: current.to, time: current.raised, color: "text-success bg-success/10" });
+    }
+    return steps;
+  }, [current]);
+>>>>>>> Stashed changes
   return (
     <>
       <PageHeader
@@ -144,6 +344,7 @@ function Allocations() {
                       <p className="text-sm font-medium">{t.label}</p>
                       <p className="text-xs text-muted-foreground">{t.by} · {t.time}</p>
                     </div>
+<<<<<<< Updated upstream
                   </li>
                 ))}
               </ol>
@@ -151,6 +352,76 @@ function Allocations() {
                 <Button variant="outline" size="sm" onClick={() => toast.error("Request rejected")}>Reject</Button>
                 <Button size="sm" onClick={() => toast.success("Request approved")}>Approve</Button>
               </div>
+=======
+                    <div className="flex items-center gap-2 text-xs">
+                      <PackageCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground">Condition:</span>
+                      <span className="font-medium capitalize">
+                        {current.raw?.allocation?.asset?.condition ?? current.raw?.asset?.condition ?? "Good"}
+                      </span>
+                    </div>
+                    {current.expectedReturnDate && (
+                      <div className="flex items-center gap-2 text-xs">
+                        <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Est. Return:</span>
+                        <span className="font-medium">{new Date(current.expectedReturnDate).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
+                  <ol className="relative space-y-4 pl-2">
+                    {timeline.map((t: any, i: number) => (
+                      <li key={i} className="flex gap-3">
+                        <div className="relative flex flex-col items-center">
+                          <div className={`flex h-8 w-8 items-center justify-center rounded-full ${t.color} shrink-0`}>
+                            <t.icon className="h-3.5 w-3.5" />
+                          </div>
+                          {i < timeline.length - 1 && <div className="w-px flex-1 bg-border mt-1" />}
+                        </div>
+                        <div className="pb-2 min-w-0">
+                          <p className="text-sm font-medium">{t.label}</p>
+                          <p className="text-xs text-muted-foreground">{t.by} · {t.time}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                  {(current.status === "pending" || current.status === "requested") && canManage ? (
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (current.type === "Transfer") {
+                            processTransferMutation.mutate({ id: current.dbId, action: "REJECT" });
+                          } else {
+                            toast.error("Only transfer requests can be rejected");
+                          }
+                        }}
+                      >
+                        Reject
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          if (current.type === "Transfer") {
+                            processTransferMutation.mutate({ id: current.dbId, action: "APPROVE" });
+                          } else if (current.type === "Return") {
+                            processReturnMutation.mutate({ id: current.dbId, checkInNotes: "Good condition - returned" });
+                          } else {
+                            toast.info("This allocation is already active.");
+                          }
+                        }}
+                      >
+                        Approve
+                      </Button>
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <div className="text-center py-8 text-sm text-muted-foreground">
+                  Select a request to view timeline and details.
+                </div>
+              )}
+>>>>>>> Stashed changes
             </CardContent>
           </Card>
         </div>

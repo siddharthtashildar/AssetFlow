@@ -10,9 +10,10 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useState } from "react";
 import { useTheme } from "@/lib/theme";
 import { toast } from "sonner";
-import { getCurrentUser } from "../lib/api";
+import { getCurrentUser, updateProfile } from "../lib/api";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings · AssetFlow" }] }),
@@ -22,8 +23,29 @@ export const Route = createFileRoute("/settings")({
 function Settings() {
   const { theme, toggle } = useTheme();
   const currentUser = getCurrentUser();
-  const initials = currentUser?.name
-    ? currentUser.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+
+  const [name, setName] = useState(currentUser?.name ?? "");
+  const [email, setEmail] = useState(currentUser?.email ?? "");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!name.trim() || !email.trim()) {
+      toast.error("Name and Email are required");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await updateProfile({ name: name.trim(), email: email.trim() });
+      toast.success("Profile updated successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const initials = name
+    ? name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : "US";
   return (
     <>
@@ -51,13 +73,36 @@ function Settings() {
                     </div>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5"><Label className="text-xs">Full name</Label><Input defaultValue={currentUser?.name ?? "Guest User"} /></div>
-                    <div className="space-y-1.5"><Label className="text-xs">Email</Label><Input defaultValue={currentUser?.email ?? "guest@example.com"} /></div>
-                    <div className="space-y-1.5"><Label className="text-xs">Role</Label><Input defaultValue={currentUser?.role ?? "EMPLOYEE"} /></div>
-                    <div className="space-y-1.5"><Label className="text-xs">Timezone</Label><Input defaultValue="Asia/Kolkata (GMT+5:30)" /></div>
-                    <div className="sm:col-span-2 space-y-1.5"><Label className="text-xs">Bio</Label><Textarea defaultValue="Leading enterprise asset operations at AssetFlow." rows={3} /></div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Full name</Label>
+                      <Input value={name} onChange={(e) => setName(e.target.value)} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Email</Label>
+                      <Input value={email} onChange={(e) => setEmail(e.target.value)} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Role</Label>
+                      <Input defaultValue={currentUser?.role ?? "EMPLOYEE"} disabled />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Timezone</Label>
+                      <Input defaultValue="Asia/Kolkata (GMT+5:30)" />
+                    </div>
+                    <div className="sm:col-span-2 space-y-1.5">
+                      <Label className="text-xs">Bio</Label>
+                      <Textarea defaultValue="Leading enterprise asset operations at AssetFlow." rows={3} />
+                    </div>
                   </div>
-                  <div className="flex justify-end gap-2"><Button variant="outline" size="sm">Cancel</Button><Button size="sm" onClick={() => toast.success("Profile updated")}>Save changes</Button></div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setName(currentUser?.name ?? "");
+                      setEmail(currentUser?.email ?? "");
+                    }}>Cancel</Button>
+                    <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                      {isSaving ? "Saving..." : "Save changes"}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

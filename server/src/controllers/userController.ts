@@ -3,6 +3,7 @@ import { UserService } from "../services/userService";
 import { Role } from "@prisma/client";
 import { prisma } from "../config/prisma";
 import { verifyToken } from "../utils/auth";
+import { AuthenticatedRequest } from "../middleware/auth";
 
 export class UserController {
   static async getSystemStatus(req: Request, res: Response) {
@@ -85,6 +86,21 @@ export class UserController {
       res.status(200).json(updatedUser);
     } catch (error: any) {
       console.error("Promotion error:", error.message);
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  static async updateProfile(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
+
+      const updatedUser = await UserService.updateProfile(req.user.userId, req.body);
+      res.status(200).json(updatedUser);
+    } catch (error: any) {
+      console.error("Update profile error:", error.message);
       res.status(400).json({ error: error.message });
     }
   }

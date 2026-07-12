@@ -168,4 +168,38 @@ export class UserService {
 
     return updatedUser;
   }
+
+  static async updateProfile(userId: string, data: { name?: string; email?: string }) {
+    const { name, email } = data;
+
+    let trimmedEmail = email?.toLowerCase().trim();
+    if (trimmedEmail) {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          email: trimmedEmail,
+          NOT: { id: userId },
+        },
+      });
+      if (existingUser) {
+        throw new Error("A user with this email address already exists");
+      }
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(name ? { name: name.trim() } : {}),
+        ...(trimmedEmail ? { email: trimmedEmail } : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+      },
+    });
+
+    return updated;
+  }
 }

@@ -66,7 +66,7 @@ export const createDepartment = async (req: Request, res: Response) => {
     res.status(201).json(department);
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error.errors });
+      res.status(400).json({ error: (error as any).errors });
     } else {
       res.status(500).json({ error: "Failed to create department", details: error.message });
     }
@@ -79,7 +79,7 @@ export const updateDepartment = async (req: Request, res: Response) => {
     const data = updateDepartmentSchema.parse(req.body);
 
     const department = await prisma.department.update({
-      where: { id },
+      where: { id: id as string },
       data: {
         ...data,
       },
@@ -92,7 +92,7 @@ export const updateDepartment = async (req: Request, res: Response) => {
     res.json(department);
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error.errors });
+      res.status(400).json({ error: (error as any).errors });
     } else {
       res.status(500).json({ error: "Failed to update department", details: error.message });
     }
@@ -104,7 +104,7 @@ export const deleteDepartment = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const dept = await prisma.department.findUnique({
-      where: { id },
+      where: { id: id as string },
       include: { _count: { select: { users: true, assets: true } } },
     });
 
@@ -112,13 +112,13 @@ export const deleteDepartment = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Department not found" });
     }
 
-    if (dept._count.users > 0 || dept._count.assets > 0) {
+    if ((dept as any)._count.users > 0 || (dept as any)._count.assets > 0) {
       return res.status(400).json({ 
         error: "Cannot delete department that has users or assets assigned. Reassign them first." 
       });
     }
 
-    await prisma.department.delete({ where: { id } });
+    await prisma.department.delete({ where: { id: id as string } });
     res.json({ success: true, id });
   } catch (error: any) {
     res.status(500).json({ error: "Failed to delete department", details: error.message });

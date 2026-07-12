@@ -67,12 +67,12 @@ export async function login(payload: Record<string, any>): Promise<AuthResponse>
     method: "POST",
     body: JSON.stringify(payload),
   });
-  
+
   if (typeof window !== "undefined") {
     localStorage.setItem("token", result.token);
     localStorage.setItem("user", JSON.stringify(result.user));
   }
-  
+
   return result;
 }
 
@@ -81,7 +81,7 @@ export async function signup(payload: Record<string, any>): Promise<AuthResponse
     method: "POST",
     body: JSON.stringify(payload),
   });
-  
+
   return result;
 }
 
@@ -113,6 +113,9 @@ export interface AssetCategory {
   name: string;
   description?: string;
   depreciation?: string;
+  _count?: {
+    assets: number;
+  };
 }
 
 export interface AssetRecord {
@@ -283,4 +286,90 @@ export interface UserRecord {
 
 export async function getUsers(): Promise<UserRecord[]> {
   return request<UserRecord[]>("/users");
+}
+
+// ----------------------------------------------------
+// AUDIT ENDPOINTS
+// ----------------------------------------------------
+
+export interface AuditAsset {
+  id: string;
+  name: string;
+  assetTag: string;
+  serialNumber: string | null;
+  status: string;
+  condition: string;
+  location: string | null;
+  category?: { id: string; name: string };
+}
+
+export interface AuditItemRecord {
+  id: string;
+  auditCycleId: string;
+  assetId: string;
+  asset: AuditAsset;
+  auditorId: string;
+  auditor: { id: string; name: string; email: string; role: string };
+  result: "PENDING" | "VERIFIED" | "MISSING" | "DAMAGED";
+  remarks: string | null;
+  createdAt: string;
+}
+
+export interface AuditCycleRecord {
+  id: string;
+  title: string;
+  departmentId: string | null;
+  department: { id: string; name: string } | null;
+  startDate: string;
+  endDate: string;
+  status: "OPEN" | "CLOSED";
+  auditItems: AuditItemRecord[];
+  createdAt: string;
+}
+
+export interface DepartmentRecord {
+  id: string;
+  name: string;
+  status: string;
+  parentDepartmentId: string | null;
+  headId: string | null;
+  createdAt: string;
+}
+
+export async function getAudits(): Promise<AuditCycleRecord[]> {
+  return request<AuditCycleRecord[]>("/audits");
+}
+
+export async function createAuditCycle(payload: {
+  title: string;
+  startDate: string;
+  endDate: string;
+  departmentId?: string;
+  categoryId?: string;
+  auditorId: string;
+}): Promise<AuditCycleRecord> {
+  return request<AuditCycleRecord>("/audits", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateAuditItem(
+  itemId: string,
+  payload: { result: string; remarks?: string }
+): Promise<AuditItemRecord> {
+  return request<AuditItemRecord>(`/audits/items/${itemId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function closeAuditCycle(cycleId: string): Promise<AuditCycleRecord> {
+  return request<AuditCycleRecord>(`/audits/${cycleId}/close`, {
+    method: "POST",
+  });
+}
+
+export async function getDepartments(): Promise<DepartmentRecord[]> {
+  return request<DepartmentRecord[]>("/departments");
 }

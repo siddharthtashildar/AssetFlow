@@ -163,7 +163,12 @@ export function Topbar({ onCommand }: { onCommand: () => void }) {
               <DropdownMenuItem><HelpCircle className="h-4 w-4" />Help & Support</DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem><LogOut className="h-4 w-4" />Sign out</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/login" className="w-full cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
+              </Link>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

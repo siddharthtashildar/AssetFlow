@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as EmployeesRouteImport } from './routes/employees'
 import { Route as DepartmentsRouteImport } from './routes/departments'
 import { Route as CategoriesRouteImport } from './routes/categories'
@@ -34,6 +36,11 @@ const ReportsRoute = ReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NotificationsRoute = NotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
@@ -42,6 +49,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
 const MaintenanceRoute = MaintenanceRouteImport.update({
   id: '/maintenance',
   path: '/maintenance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmployeesRoute = EmployeesRouteImport.update({
@@ -103,8 +115,10 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/departments': typeof DepartmentsRoute
   '/employees': typeof EmployeesRoute
+  '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/notifications': typeof NotificationsRoute
+  '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/assets/allocations': typeof AssetsAllocationsRoute
@@ -118,8 +132,10 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/departments': typeof DepartmentsRoute
   '/employees': typeof EmployeesRoute
+  '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/notifications': typeof NotificationsRoute
+  '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/assets/allocations': typeof AssetsAllocationsRoute
@@ -135,8 +151,10 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/departments': typeof DepartmentsRoute
   '/employees': typeof EmployeesRoute
+  '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/notifications': typeof NotificationsRoute
+  '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/assets/allocations': typeof AssetsAllocationsRoute
@@ -153,8 +171,10 @@ export interface FileRouteTypes {
     | '/categories'
     | '/departments'
     | '/employees'
+    | '/login'
     | '/maintenance'
     | '/notifications'
+    | '/register'
     | '/reports'
     | '/settings'
     | '/assets/allocations'
@@ -168,8 +188,10 @@ export interface FileRouteTypes {
     | '/categories'
     | '/departments'
     | '/employees'
+    | '/login'
     | '/maintenance'
     | '/notifications'
+    | '/register'
     | '/reports'
     | '/settings'
     | '/assets/allocations'
@@ -184,8 +206,10 @@ export interface FileRouteTypes {
     | '/categories'
     | '/departments'
     | '/employees'
+    | '/login'
     | '/maintenance'
     | '/notifications'
+    | '/register'
     | '/reports'
     | '/settings'
     | '/assets/allocations'
@@ -201,8 +225,10 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   DepartmentsRoute: typeof DepartmentsRoute
   EmployeesRoute: typeof EmployeesRoute
+  LoginRoute: typeof LoginRoute
   MaintenanceRoute: typeof MaintenanceRoute
   NotificationsRoute: typeof NotificationsRoute
+  RegisterRoute: typeof RegisterRoute
   ReportsRoute: typeof ReportsRoute
   SettingsRoute: typeof SettingsRoute
 }
@@ -223,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/notifications': {
       id: '/notifications'
       path: '/notifications'
@@ -235,6 +268,13 @@ declare module '@tanstack/react-router' {
       path: '/maintenance'
       fullPath: '/maintenance'
       preLoaderRoute: typeof MaintenanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/employees': {
@@ -333,8 +373,10 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   DepartmentsRoute: DepartmentsRoute,
   EmployeesRoute: EmployeesRoute,
+  LoginRoute: LoginRoute,
   MaintenanceRoute: MaintenanceRoute,
   NotificationsRoute: NotificationsRoute,
+  RegisterRoute: RegisterRoute,
   ReportsRoute: ReportsRoute,
   SettingsRoute: SettingsRoute,
 }

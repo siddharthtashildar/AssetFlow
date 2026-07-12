@@ -508,3 +508,7 @@ export async function markNotificationAsRead(id: string): Promise<NotificationRe
     method: "PATCH",
   });
 }
+
+export async function getAnalyticsSummary(): Promise<any> {
+  return request<any>("/reports/summary");
+}

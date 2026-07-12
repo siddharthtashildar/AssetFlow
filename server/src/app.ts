@@ -9,6 +9,7 @@ import maintenanceRoutes from "./routes/maintenanceRoutes";
 import auditRoutes from "./routes/auditRoutes";
 import departmentRoutes from "./routes/departmentRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
+import reportRoutes from "./routes/reportRoutes";
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use("/api", maintenanceRoutes);
 app.use("/api", auditRoutes);
 app.use("/api", departmentRoutes);
 app.use("/api", notificationRoutes);
+app.use("/api", reportRoutes);
 
 // Catch-all handler for unknown routes
 app.use((_req, res) => {

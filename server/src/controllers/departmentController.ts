@@ -66,7 +66,7 @@ export const createDepartment = async (req: Request, res: Response) => {
     res.status(201).json(department);
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error.errors });
+      res.status(400).json({ error: (error as any).errors });
     } else {
       res.status(500).json({ error: "Failed to create department", details: error.message });
     }
@@ -75,13 +75,13 @@ export const createDepartment = async (req: Request, res: Response) => {
 
 export const updateDepartment = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const data = updateDepartmentSchema.parse(req.body);
 
     const department = await prisma.department.update({
       where: { id },
       data: {
-        ...data,
+        ...(data as any),
       },
       include: {
         head: { select: { id: true, name: true } },
@@ -92,7 +92,7 @@ export const updateDepartment = async (req: Request, res: Response) => {
     res.json(department);
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error.errors });
+      res.status(400).json({ error: (error as any).errors });
     } else {
       res.status(500).json({ error: "Failed to update department", details: error.message });
     }
@@ -101,12 +101,12 @@ export const updateDepartment = async (req: Request, res: Response) => {
 
 export const deleteDepartment = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
-    const dept = await prisma.department.findUnique({
+    const dept = (await prisma.department.findUnique({
       where: { id },
       include: { _count: { select: { users: true, assets: true } } },
-    });
+    })) as any;
 
     if (!dept) {
       return res.status(404).json({ error: "Department not found" });

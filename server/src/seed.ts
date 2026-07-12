@@ -1,6 +1,6 @@
 import { prisma } from "./config/prisma";
 import { hashPassword } from "./utils/auth";
-import { Role, AssetStatus, AssetCondition, AllocationStatus, TransferStatus } from "@prisma/client";
+import { Role, AssetStatus, AssetCondition, AllocationStatus, TransferStatus, BookingStatus, NotificationType, MaintenanceStatus, Priority } from "@prisma/client";
 
 async function main() {
   console.log("🌱 Starting Database Seeding...");
@@ -262,8 +262,174 @@ async function main() {
       status: TransferStatus.REQUESTED,
     },
   });
-
   console.log("   ✅ Transfer requests created.");
+
+  // 7. Create Maintenance Requests
+  console.log("🔧 Creating maintenance requests...");
+  const maint1 = await prisma.maintenanceRequest.create({
+    data: {
+      assetId: asset1.id,
+      raisedById: emp1.id,
+      description: "Screen flickering intermittently when using GPU intensive tasks",
+      priority: Priority.HIGH,
+      status: MaintenanceStatus.PENDING,
+      createdAt: new Date(Date.now() - 2 * 3600 * 1000), // 2 hours ago
+    },
+  });
+
+  const maint2 = await prisma.maintenanceRequest.create({
+    data: {
+      assetId: asset2.id,
+      raisedById: emp2.id,
+      description: "Intermittent keyboard issues with spatial keys",
+      priority: Priority.MEDIUM,
+      status: MaintenanceStatus.APPROVED,
+      technician: "IT Team Alpha",
+      createdAt: new Date(Date.now() - 5 * 3600 * 1000), // 5 hours ago
+    },
+  });
+
+  const maint3 = await prisma.maintenanceRequest.create({
+    data: {
+      assetId: asset5.id,
+      raisedById: manager.id,
+      description: "Port failures on DP input",
+      priority: Priority.CRITICAL,
+      status: MaintenanceStatus.IN_PROGRESS,
+      technician: "AV Team",
+      createdAt: new Date(Date.now() - 24 * 3600 * 1000), // 1 day ago
+    },
+  });
+
+  const maint4 = await prisma.maintenanceRequest.create({
+    data: {
+      assetId: asset6.id,
+      raisedById: admin.id,
+      description: "Broken armrest adjustment mechanism",
+      priority: Priority.LOW,
+      status: MaintenanceStatus.RESOLVED,
+      technician: "Facilities Team",
+      resolutionDetails: "Replaced armrest assembly",
+      createdAt: new Date(Date.now() - 3 * 24 * 3600 * 1000), // 3 days ago
+      updatedAt: new Date(Date.now() - 2 * 24 * 3600 * 1000),
+    },
+  });
+  console.log("   ✅ Maintenance requests created.");
+
+  // 8. Create Bookings
+  console.log("📅 Creating bookings...");
+  // Let's create some bookings for the current week
+  const today = new Date();
+  const bookingsData = [
+    {
+      assetId: asset4.id,
+      userId: emp1.id,
+      title: "Conference Room — Aurora Meeting",
+      purpose: "Engineering Weekly sync",
+      status: BookingStatus.ONGOING,
+      startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0),
+      endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 30),
+    },
+    {
+      assetId: asset5.id,
+      userId: emp2.id,
+      title: "Design Review Session",
+      purpose: "Rally Bar & Display demo",
+      status: BookingStatus.UPCOMING,
+      startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0),
+      endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 0),
+    },
+    {
+      assetId: asset4.id,
+      userId: admin.id,
+      title: "IT Infrastructure Planning",
+      purpose: "Network upgrade discussion",
+      status: BookingStatus.UPCOMING,
+      startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 10, 0),
+      endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 11, 0),
+    }
+  ];
+
+  for (const b of bookingsData) {
+    await prisma.booking.create({ data: b });
+  }
+  console.log("   ✅ Bookings created.");
+
+  // 9. Create Notifications
+  console.log("🔔 Creating notifications...");
+  const users = [admin, manager, emp1, emp2];
+  for (const u of users) {
+    await prisma.notification.create({
+      data: {
+        userId: u.id,
+        type: NotificationType.MAINTENANCE,
+        title: "New maintenance request",
+        message: "John Doe opened a maintenance request on MacBook Pro 16\"",
+        isRead: false,
+        createdAt: new Date(Date.now() - 2 * 60 * 1000), // 2 min ago
+      },
+    });
+
+    await prisma.notification.create({
+      data: {
+        userId: u.id,
+        type: NotificationType.BOOKING,
+        title: "Booking conflict detected",
+        message: "Conference Room Cosmos has overlapping reservations",
+        isRead: false,
+        createdAt: new Date(Date.now() - 18 * 60 * 1000), // 18 min ago
+      },
+    });
+
+    await prisma.notification.create({
+      data: {
+        userId: u.id,
+        type: NotificationType.AUDIT,
+        title: "Audit AUD-2024-Q1 milestone",
+        message: "87% verified — 39 assets remaining",
+        isRead: false,
+        createdAt: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
+      },
+    });
+
+    await prisma.notification.create({
+      data: {
+        userId: u.id,
+        type: NotificationType.TRANSFER,
+        title: "Transfer approved",
+        message: "Dell XPS 15 moved from Berlin to Bangalore R&D",
+        isRead: true,
+        createdAt: new Date(Date.now() - 3 * 3600 * 1000), // 3 hours ago
+      },
+    });
+  }
+  console.log("   ✅ Notifications created.");
+
+  // 10. Create Activity Logs
+  console.log("📝 Creating activity logs...");
+  for (const u of users) {
+    await prisma.activityLog.create({
+      data: {
+        userId: u.id,
+        action: "CREATE",
+        entity: "Asset",
+        entityId: asset1.id,
+        createdAt: new Date(Date.now() - 4 * 3600 * 1000),
+      },
+    });
+
+    await prisma.activityLog.create({
+      data: {
+        userId: u.id,
+        action: "ALLOCATE",
+        entity: "Allocation",
+        entityId: alloc2.id,
+        createdAt: new Date(Date.now() - 2 * 3600 * 1000),
+      },
+    });
+  }
+  console.log("   ✅ Activity logs created.");
+
   console.log("\n🚀 Database Seeding Completed Successfully! You can now log in using:\n");
   console.log("   Admin:    admin@assetflow.io   / password123");
   console.log("   Manager:  manager@assetflow.io / password123");

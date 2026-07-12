@@ -1,0 +1,109 @@
+ Volume in drive C is Windows
+ Volume Serial Number is 7AD4-E568
+
+ Directory of C:\Users\siddh\AssetFlow\server\node_modules\@prisma\client
+
+12-07-2026  12:52    <DIR>          .
+12-07-2026  12:52    <DIR>          ..
+12-07-2026  12:52                39 default.d.ts
+12-07-2026  12:52                61 default.js
+12-07-2026  12:52                36 edge.d.ts
+12-07-2026  12:52               107 edge.js
+12-07-2026  12:52                40 extension.d.ts
+12-07-2026  12:52               111 extension.js
+12-07-2026  12:52    <DIR>          generator-build
+12-07-2026  12:52                80 index-browser.js
+12-07-2026  12:52                39 index.d.ts
+12-07-2026  12:52               110 index.js
+12-07-2026  12:52            11,357 LICENSE
+12-07-2026  12:52             8,511 package.json
+12-07-2026  12:52             2,409 README.md
+12-07-2026  12:52    <DIR>          runtime
+12-07-2026  12:52    <DIR>          scripts
+12-07-2026  12:52                35 sql.d.ts
+12-07-2026  12:52                70 sql.js
+12-07-2026  12:52                51 sql.mjs
+              15 File(s)         23,056 bytes
+
+ Directory of C:\Users\siddh\AssetFlow\server\node_modules\@prisma\client\generator-build
+
+12-07-2026  12:52    <DIR>          .
+12-07-2026  12:52    <DIR>          ..
+12-07-2026  12:52           563,668 index.js
+               1 File(s)        563,668 bytes
+
+ Directory of C:\Users\siddh\AssetFlow\server\node_modules\@prisma\client\runtime
+
+12-07-2026  12:52    <DIR>          .
+12-07-2026  12:52    <DIR>          ..
+12-07-2026  12:52           112,208 client.d.mts
+12-07-2026  12:52           112,208 client.d.ts
+12-07-2026  12:52           186,706 client.js
+12-07-2026  12:52           874,463 client.js.map
+12-07-2026  12:52           185,930 client.mjs
+12-07-2026  12:52           875,002 client.mjs.map
+12-07-2026  12:52             3,454 index-browser.d.mts
+12-07-2026  12:52             3,454 index-browser.d.ts
+12-07-2026  12:52             2,346 index-browser.js
+12-07-2026  12:52             7,925 index-browser.js.map
+12-07-2026  12:52             1,868 index-browser.mjs
+12-07-2026  12:52             7,920 index-browser.mjs.map
+12-07-2026  12:52             8,153 query_compiler_fast_bg.cockroachdb.js
+12-07-2026  12:52             6,288 query_compiler_fast_bg.cockroachdb.mjs
+12-07-2026  12:52         4,973,831 query_compiler_fast_bg.cockroachdb.wasm-base64.js
+12-07-2026  12:52         4,973,821 query_compiler_fast_bg.cockroachdb.wasm-base64.mjs
+12-07-2026  12:52             8,153 query_compiler_fast_bg.mysql.js
+12-07-2026  12:52             6,288 query_compiler_fast_bg.mysql.mjs
+12-07-2026  12:52         4,837,631 query_compiler_fast_bg.mysql.wasm-base64.js
+12-07-2026  12:52         4,837,621 query_compiler_fast_bg.mysql.wasm-base64.mjs
+12-07-2026  12:52             8,153 query_compiler_fast_bg.postgresql.js
+12-07-2026  12:52             6,288 query_compiler_fast_bg.postgresql.mjs
+12-07-2026  12:52         4,903,679 query_compiler_fast_bg.postgresql.wasm-base64.js
+12-07-2026  12:52         4,903,669 query_compiler_fast_bg.postgresql.wasm-base64.mjs
+12-07-2026  12:52             8,153 query_compiler_fast_bg.sqlite.js
+12-07-2026  12:52             6,288 query_compiler_fast_bg.sqlite.mjs
+12-07-2026  12:52         4,722,779 query_compiler_fast_bg.sqlite.wasm-base64.js
+12-07-2026  12:52         4,722,769 query_compiler_fast_bg.sqlite.wasm-base64.mjs
+12-07-2026  12:52             8,153 query_compiler_fast_bg.sqlserver.js
+12-07-2026  12:52             6,288 query_compiler_fast_bg.sqlserver.mjs
+12-07-2026  12:52         5,026,619 query_compiler_fast_bg.sqlserver.wasm-base64.js
+12-07-2026  12:52         5,026,609 query_compiler_fast_bg.sqlserver.wasm-base64.mjs
+12-07-2026  12:52             8,153 query_compiler_small_bg.cockroachdb.js
+12-07-2026  12:52             6,288 query_compiler_small_bg.cockroachdb.mjs
+12-07-2026  12:52         2,505,271 query_compiler_small_bg.cockroachdb.wasm-base64.js
+12-07-2026  12:52         2,505,261 query_compiler_small_bg.cockroachdb.wasm-base64.mjs
+12-07-2026  12:52             8,153 query_compiler_small_bg.mysql.js
+12-07-2026  12:52             6,288 query_compiler_small_bg.mysql.mjs
+12-07-2026  12:52         2,428,115 query_compiler_small_bg.mysql.wasm-base64.js
+12-07-2026  12:52         2,428,105 query_compiler_small_bg.mysql.wasm-base64.mjs
+12-07-2026  12:52             8,153 query_compiler_small_bg.postgresql.js
+12-07-2026  12:52             6,288 query_compiler_small_bg.postgresql.mjs
+12-07-2026  12:52         2,470,063 query_compiler_small_bg.postgresql.wasm-base64.js
+12-07-2026  12:52         2,470,053 query_compiler_small_bg.postgresql.wasm-base64.mjs
+12-07-2026  12:52             8,153 query_compiler_small_bg.sqlite.js
+12-07-2026  12:52             6,288 query_compiler_small_bg.sqlite.mjs
+12-07-2026  12:52         2,366,263 query_compiler_small_bg.sqlite.wasm-base64.js
+12-07-2026  12:52         2,366,253 query_compiler_small_bg.sqlite.wasm-base64.mjs
+12-07-2026  12:52             8,153 query_compiler_small_bg.sqlserver.js
+12-07-2026  12:52             6,288 query_compiler_small_bg.sqlserver.mjs
+12-07-2026  12:52         2,468,475 query_compiler_small_bg.sqlserver.wasm-base64.js
+12-07-2026  12:52         2,468,465 query_compiler_small_bg.sqlserver.wasm-base64.mjs
+12-07-2026  12:52                25 wasm-compiler-edge.d.ts
+12-07-2026  12:52           201,380 wasm-compiler-edge.js
+12-07-2026  12:52           999,562 wasm-compiler-edge.js.map
+12-07-2026  12:52           200,088 wasm-compiler-edge.mjs
+12-07-2026  12:52         1,000,149 wasm-compiler-edge.mjs.map
+              57 File(s)     78,324,450 bytes
+
+ Directory of C:\Users\siddh\AssetFlow\server\node_modules\@prisma\client\scripts
+
+12-07-2026  12:52    <DIR>          .
+12-07-2026  12:52    <DIR>          ..
+12-07-2026  12:52             5,732 colors.js
+12-07-2026  12:52             4,004 default-index.d.ts
+12-07-2026  12:52             2,075 default-index.js
+               3 File(s)         11,811 bytes
+
+     Total Files Listed:
+              76 File(s)     78,922,985 bytes
+              11 Dir(s)  99,614,810,112 bytes free

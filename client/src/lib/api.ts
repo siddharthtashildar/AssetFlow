@@ -459,3 +459,82 @@ export async function deleteDepartment(id: string): Promise<{ success: boolean; 
     method: "DELETE",
   });
 }
+
+// ----------------------------------------------------
+// DASHBOARD ENDPOINTS
+// ----------------------------------------------------
+
+export interface DashboardKPIs {
+  available: number;
+  allocated: number;
+  maintenance: number;
+  activeBookings: number;
+  upcomingReturns: number;
+  pendingTransfers: number;
+}
+
+export interface DashboardAssetUtilization {
+  month: string;
+  available: number;
+  allocated: number;
+  maintenance: number;
+}
+
+export interface DashboardMaintenanceTrend {
+  week: string;
+  opened: number;
+  resolved: number;
+}
+
+export interface DashboardBookingTrend {
+  day: string;
+  bookings: number;
+}
+
+export interface DashboardRecentAsset {
+  id: string;
+  tag: string;
+  name: string;
+  status: string;
+  assignee: string | null;
+  location: string;
+  image: string;
+}
+
+export interface DashboardRecentMaintenance {
+  id: string;
+  asset: string;
+  priority: string;
+  status: string;
+}
+
+export interface DashboardUpcomingReturn {
+  id: string;
+  name: string;
+  assignee: string;
+  expectedReturnDate: string | null;
+}
+
+export interface DashboardNotification {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  unread: boolean;
+}
+
+export interface DashboardStatsResponse {
+  kpi: DashboardKPIs;
+  utilizationData: DashboardAssetUtilization[];
+  maintenanceTrends: DashboardMaintenanceTrend[];
+  bookingTrends: DashboardBookingTrend[];
+  recentAssets: DashboardRecentAsset[];
+  recentMaintenance: DashboardRecentMaintenance[];
+  upcomingReturns: DashboardUpcomingReturn[];
+  notifications: DashboardNotification[];
+}
+
+export async function getDashboardStats(): Promise<DashboardStatsResponse> {
+  return request<DashboardStatsResponse>("/dashboard/stats");
+}

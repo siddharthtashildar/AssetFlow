@@ -19,11 +19,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  assets, maintenanceRequests, utilizationData, maintenanceTrends,
-  bookingTrends, notifications, bookings,
-} from "@/lib/mock-data";
-import { getCurrentUser, getDepartments } from "../lib/api";
+import { getCurrentUser, getDepartments, getDashboardStats } from "../lib/api";
 import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/")({
@@ -36,9 +32,11 @@ const C = ["#6366f1", "#10b981", "#f59e0b", "#0ea5e9", "#ec4899", "#8b5cf6", "#1
 
 function Dashboard() {
   const currentUser = getCurrentUser();
-  const recentAssets = assets.slice(0, 6);
-  const recentMaint = maintenanceRequests.slice(0, 5);
-  const upcomingReturns = assets.filter((a) => a.status === "allocated").slice(0, 4);
+
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["dashboardStats"],
+    queryFn: getDashboardStats,
+  });
 
   const { data: realDepartments = [] } = useQuery({
     queryKey: ["departments"],
@@ -49,6 +47,54 @@ function Dashboard() {
     .map((d) => ({ name: d.name, value: d._count?.assets || 0 }))
     .filter(d => d.value > 0); // only show those with assets
 
+  const formatDaysRemaining = (expectedReturnDate: string | null) => {
+    if (!expectedReturnDate) return "N/A";
+    const diff = new Date(expectedReturnDate).getTime() - new Date().getTime();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    if (days > 0) return `in ${days} days`;
+    if (days === 0) return "today";
+    return `${Math.abs(days)} days overdue`;
+  };
+
+  const formatRelativeTime = (dateStr: string) => {
+    const diff = new Date().getTime() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days === 1) return "Yesterday";
+    return `${days} days ago`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[80vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <RotateCw className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const kpi = stats?.kpi ?? {
+    available: 0,
+    allocated: 0,
+    maintenance: 0,
+    activeBookings: 0,
+    upcomingReturns: 0,
+    pendingTransfers: 0,
+  };
+
+  const utilizationData = stats?.utilizationData ?? [];
+  const maintenanceTrends = stats?.maintenanceTrends ?? [];
+  const bookingTrends = stats?.bookingTrends ?? [];
+  const recentAssets = stats?.recentAssets ?? [];
+  const recentMaint = stats?.recentMaintenance ?? [];
+  const upcomingReturns = stats?.upcomingReturns ?? [];
+  const listNotifications = stats?.notifications ?? [];
 
   return (
     <>
@@ -65,12 +111,12 @@ function Dashboard() {
       <PageBody>
         {/* KPI Grid */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <StatCard label="Available" value="238" delta={4.2} icon={Package} tone="success" />
-          <StatCard label="Allocated" value="933" delta={2.1} icon={PackageCheck} tone="info" />
-          <StatCard label="Maintenance" value="52" delta={-8.4} icon={Wrench} tone="warning" />
-          <StatCard label="Active Bookings" value="71" delta={12.6} icon={CalendarDays} tone="default" />
-          <StatCard label="Upcoming Returns" value="24" delta={-3.1} icon={RotateCw} tone="info" />
-          <StatCard label="Pending Transfers" value="9" delta={1.4} icon={ArrowLeftRight} tone="warning" />
+          <StatCard label="Available" value={String(kpi.available)} delta={4.2} icon={Package} tone="success" />
+          <StatCard label="Allocated" value={String(kpi.allocated)} delta={2.1} icon={PackageCheck} tone="info" />
+          <StatCard label="Maintenance" value={String(kpi.maintenance)} delta={-8.4} icon={Wrench} tone="warning" />
+          <StatCard label="Active Bookings" value={String(kpi.activeBookings)} delta={12.6} icon={CalendarDays} tone="default" />
+          <StatCard label="Upcoming Returns" value={String(kpi.upcomingReturns)} delta={-3.1} icon={RotateCw} tone="info" />
+          <StatCard label="Pending Transfers" value={String(kpi.pendingTransfers)} delta={1.4} icon={ArrowLeftRight} tone="warning" />
         </div>
 
         {/* Charts row */}
@@ -255,11 +301,11 @@ function Dashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {upcomingReturns.map((a, i) => (
+                      {upcomingReturns.map((a) => (
                         <TableRow key={a.id}>
                           <TableCell className="text-sm">{a.name}</TableCell>
                           <TableCell className="text-sm">{a.assignee}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">in {i + 2} days</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{formatDaysRemaining(a.expectedReturnDate)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -294,13 +340,13 @@ function Dashboard() {
                 <Link to="/notifications" className="text-xs text-primary hover:underline">View all</Link>
               </CardHeader>
               <CardContent className="space-y-3">
-                {notifications.slice(0, 4).map((n) => (
+                {listNotifications.slice(0, 4).map((n) => (
                   <div key={n.id} className="flex gap-3">
                     <Avatar className="h-8 w-8"><AvatarFallback className="text-[10px] bg-primary/10 text-primary">{n.type.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium truncate">{n.title}</p>
                       <p className="text-xs text-muted-foreground line-clamp-1">{n.body}</p>
-                      <p className="text-[10px] text-muted-foreground/80 mt-0.5">{n.time}</p>
+                      <p className="text-[10px] text-muted-foreground/80 mt-0.5">{formatRelativeTime(n.createdAt)}</p>
                     </div>
                   </div>
                 ))}

@@ -1,4 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useState } from "react";
 import { Bell, Search, Moon, Sun, Command as CommandIcon, ChevronRight, LogOut, User, CreditCard, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,17 @@ function Breadcrumbs() {
 export function Topbar({ onCommand }: { onCommand: () => void }) {
   const { theme, toggle } = useTheme();
   const unread = notifications.filter((n) => n.unread).length;
+  
+  const [currentUser] = useState(() => {
+    if (typeof window === "undefined") return null;
+    const stored = localStorage.getItem("user");
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return null;
+    }
+  });
 
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 px-3 md:px-4">
@@ -140,19 +152,21 @@ export function Topbar({ onCommand }: { onCommand: () => void }) {
             <button className="flex items-center gap-2 rounded-full hover:bg-muted transition-colors pl-1 pr-2 py-1">
               <Avatar className="h-7 w-7">
                 <AvatarImage src="" />
-                <AvatarFallback className="text-[11px] bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">AS</AvatarFallback>
+                <AvatarFallback className="text-[11px] bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
+                  {currentUser?.name ? currentUser.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) : "AS"}
+                </AvatarFallback>
               </Avatar>
               <div className="hidden sm:block text-left leading-tight">
-                <div className="text-xs font-medium">Aarav Sharma</div>
-                <div className="text-[10px] text-muted-foreground">Admin</div>
+                <div className="text-xs font-medium">{currentUser?.name ?? "Aarav Sharma"}</div>
+                <div className="text-[10px] text-muted-foreground capitalize">{currentUser?.role?.toLowerCase() ?? "Admin"}</div>
               </div>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col">
-                <span className="text-sm font-medium">Aarav Sharma</span>
-                <span className="text-xs text-muted-foreground font-normal">aarav@assetflow.io</span>
+                <span className="text-sm font-medium">{currentUser?.name ?? "Aarav Sharma"}</span>
+                <span className="text-xs text-muted-foreground font-normal">{currentUser?.email ?? "aarav@assetflow.io"}</span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -164,10 +178,17 @@ export function Topbar({ onCommand }: { onCommand: () => void }) {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/login" className="w-full cursor-pointer">
-                <LogOut className="mr-2 h-4 w-4" />
+              <button
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("user");
+                  window.location.href = "/login";
+                }}
+                className="w-full flex items-center cursor-pointer text-left px-2 py-1.5 text-sm"
+              >
+                <LogOut className="mr-2 h-4 w-4 text-muted-foreground" />
                 Sign out
-              </Link>
+              </button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

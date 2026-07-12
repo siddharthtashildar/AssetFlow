@@ -20,12 +20,19 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required."),
 });
 
+import { login } from "../lib/api";
+import { useState } from "react";
+import { toast } from "sonner";
+
 export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
 function LoginPage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -34,10 +41,19 @@ function LoginPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof loginSchema>) {
-    console.log(values);
-    // Add auth logic here, for now just route to /
-    router.navigate({ to: "/" });
+  async function onSubmit(values: z.infer<typeof loginSchema>) {
+    setLoading(true);
+    setError(null);
+    try {
+      await login(values);
+      toast.success("Welcome back!", { description: "You have signed in successfully." });
+      router.navigate({ to: "/" });
+    } catch (err: any) {
+      setError(err.message || "Invalid credentials");
+      toast.error("Sign in failed", { description: err.message });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -94,8 +110,13 @@ function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full mt-2">
-                Sign In
+              {error && (
+                <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive font-medium">
+                  {error}
+                </div>
+              )}
+              <Button type="submit" className="w-full mt-2" disabled={loading}>
+                {loading ? "Signing In..." : "Sign In"}
               </Button>
             </form>
           </Form>

@@ -88,6 +88,15 @@ function RootComponent() {
   // Routes where we don't want the AppShell (sidebar/topbar)
   const isAuthRoute = pathname === '/login' || pathname === '/register';
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+      if (!token && !isAuthRoute) {
+        router.navigate({ to: "/login" });
+      }
+    }
+  }, [pathname, isAuthRoute, router]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>

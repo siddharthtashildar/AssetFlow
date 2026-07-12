@@ -21,8 +21,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { assets } from "@/lib/mock-data";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { getAssets, getAllocations, getCurrentUser } from "../lib/api";
 
 export const Route = createFileRoute("/assets/")({
   head: () => ({ meta: [{ title: "Asset Directory · AssetFlow" }] }),
@@ -32,6 +32,39 @@ export const Route = createFileRoute("/assets/")({
 const ALL_COLS = ["Asset", "Category", "Status", "Condition", "Assignee", "Location", "Cost", "QR"] as const;
 
 function AssetDirectory() {
+  const currentUser = getCurrentUser();
+  const canManage = currentUser?.role === "ADMIN" || currentUser?.role === "ASSET_MANAGER";
+
+  const { data: dbAssets = [] } = useQuery({
+    queryKey: ["assets"],
+    queryFn: () => getAssets(),
+  });
+
+  const { data: dbAllocations = [] } = useQuery({
+    queryKey: ["allocations"],
+    queryFn: () => getAllocations(),
+  });
+
+  const assets = useMemo(() => {
+    return dbAssets.map((a: any) => {
+      const activeAlloc = a.allocations?.[0];
+      return {
+        id: a.id,
+        tag: a.assetTag,
+        name: a.name,
+        category: a.category?.name ?? "Uncategorized",
+        serial: a.serialNumber ?? "",
+        status: a.status.toLowerCase(),
+        condition: a.condition.toLowerCase(),
+        location: a.location ?? "Unknown",
+        assignee: activeAlloc?.user?.name ?? null,
+        department: "",
+        cost: a.acquisitionCost ?? 0,
+        purchaseDate: a.acquisitionDate ? new Date(a.acquisitionDate).toLocaleDateString() : "",
+        shared: a.isBookable,
+      };
+    });
+  }, [dbAssets]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [category, setCategory] = useState<string>("all");
@@ -73,7 +106,9 @@ function AssetDirectory() {
         actions={
           <>
             <Button variant="outline" size="sm"><Download />Export</Button>
-            <Button size="sm" asChild><Link to="/assets/register"><Plus />Register asset</Link></Button>
+            {canManage && (
+              <Button size="sm" asChild><Link to="/assets/register"><Plus />Register asset</Link></Button>
+            )}
           </>
         }
       />
@@ -201,10 +236,14 @@ function AssetDirectory() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem><Eye />View details</DropdownMenuItem>
-                          <DropdownMenuItem><Pencil />Edit</DropdownMenuItem>
+                          {canManage && <DropdownMenuItem><Pencil />Edit</DropdownMenuItem>}
                           <DropdownMenuItem><QrCode />Print label</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive"><Trash2 />Retire asset</DropdownMenuItem>
+                          {canManage && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-destructive"><Trash2 />Retire asset</DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

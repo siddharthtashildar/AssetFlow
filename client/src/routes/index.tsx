@@ -23,6 +23,7 @@ import {
   assets, maintenanceRequests, utilizationData, maintenanceTrends,
   bookingTrends, departmentAllocation, notifications, bookings,
 } from "@/lib/mock-data";
+import { getCurrentUser } from "../lib/api";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Dashboard · AssetFlow" }] }),
@@ -33,6 +34,7 @@ const CHART_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--c
 const C = ["#6366f1", "#10b981", "#f59e0b", "#0ea5e9", "#ec4899", "#8b5cf6", "#14b8a6", "#f43f5e"];
 
 function Dashboard() {
+  const currentUser = getCurrentUser();
   const recentAssets = assets.slice(0, 6);
   const recentMaint = maintenanceRequests.slice(0, 5);
   const upcomingReturns = assets.filter((a) => a.status === "allocated").slice(0, 4);
@@ -40,7 +42,7 @@ function Dashboard() {
   return (
     <>
       <PageHeader
-        title="Welcome back, Aarav"
+        title={`Welcome back, ${currentUser?.name?.split(" ")[0] ?? "Guest"}`}
         description="Here's a live snapshot of your organization's assets, bookings and maintenance activity."
         actions={
           <>

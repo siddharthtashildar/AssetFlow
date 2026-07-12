@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Plus, Search, MoreHorizontal, Mail, MapPin, Filter } from "lucide-react";
 import { PageHeader, PageBody } from "@/components/shared/page-header";
@@ -12,7 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { employees } from "@/lib/mock-data";
+import { useQuery } from "@tanstack/react-query";
+import { getUsers, getCurrentUser } from "../lib/api";
 
 export const Route = createFileRoute("/employees")({
   head: () => ({ meta: [{ title: "Employees · AssetFlow" }] }),
@@ -24,18 +25,51 @@ function initials(n: string) { return n.split(" ").map((s) => s[0]).slice(0, 2).
 function Employees() {
   const [q, setQ] = useState("");
   const [dept, setDept] = useState("all");
+
+  const currentUser = getCurrentUser();
+  const isAdmin = currentUser?.role === "ADMIN";
+
+  const { data: dbUsers = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => getUsers(),
+  });
+
+  const employees = useMemo(() => {
+    return dbUsers.map((u: any) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      department: u.department?.name ?? "Engineering",
+      location: "HQ (San Francisco)",
+      status: u.isActive ? "active" : "inactive",
+      joined: u.createdAt
+        ? new Date(u.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+        : "Jul 2026",
+    }));
+  }, [dbUsers]);
+
   const filtered = useMemo(() => employees.filter((e) => {
     const okQ = !q || e.name.toLowerCase().includes(q.toLowerCase()) || e.email.toLowerCase().includes(q.toLowerCase());
     const okD = dept === "all" || e.department === dept;
     return okQ && okD;
-  }), [q, dept]);
+  }), [employees, q, dept]);
 
   return (
     <>
       <PageHeader
         title="Employees"
         description="Directory of all employees, their roles, and current asset allocations."
-        actions={<><Button size="sm" variant="outline">Import CSV</Button><Button size="sm"><Plus />Add employee</Button></>}
+        actions={
+          <>
+            <Button size="sm" variant="outline">Import CSV</Button>
+            {isAdmin && (
+              <Button size="sm" asChild>
+                <Link to="/register"><Plus />Add employee</Link>
+              </Button>
+            )}
+          </>
+        }
       />
       <PageBody>
         <Card>

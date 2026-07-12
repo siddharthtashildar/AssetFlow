@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useTheme } from "@/lib/theme";
 import { toast } from "sonner";
+import { getCurrentUser } from "../lib/api";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings · AssetFlow" }] }),
@@ -20,6 +21,10 @@ export const Route = createFileRoute("/settings")({
 
 function Settings() {
   const { theme, toggle } = useTheme();
+  const currentUser = getCurrentUser();
+  const initials = currentUser?.name
+    ? currentUser.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "US";
   return (
     <>
       <PageHeader title="Settings" description="Manage your profile, workspace preferences and security." />
@@ -39,16 +44,16 @@ function Settings() {
                 <CardHeader><CardTitle className="text-base">Profile</CardTitle><CardDescription>How others see you across AssetFlow.</CardDescription></CardHeader>
                 <CardContent className="space-y-5">
                   <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16"><AvatarFallback className="text-lg bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">AS</AvatarFallback></Avatar>
+                    <Avatar className="h-16 w-16"><AvatarFallback className="text-lg bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">{initials}</AvatarFallback></Avatar>
                     <div>
                       <Button size="sm" variant="outline">Change photo</Button>
                       <p className="text-[11px] text-muted-foreground mt-1.5">JPG, PNG. Max 2MB.</p>
                     </div>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5"><Label className="text-xs">Full name</Label><Input defaultValue="Aarav Sharma" /></div>
-                    <div className="space-y-1.5"><Label className="text-xs">Email</Label><Input defaultValue="aarav@assetflow.io" /></div>
-                    <div className="space-y-1.5"><Label className="text-xs">Role</Label><Input defaultValue="Administrator" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">Full name</Label><Input defaultValue={currentUser?.name ?? "Guest User"} /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">Email</Label><Input defaultValue={currentUser?.email ?? "guest@example.com"} /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">Role</Label><Input defaultValue={currentUser?.role ?? "EMPLOYEE"} /></div>
                     <div className="space-y-1.5"><Label className="text-xs">Timezone</Label><Input defaultValue="Asia/Kolkata (GMT+5:30)" /></div>
                     <div className="sm:col-span-2 space-y-1.5"><Label className="text-xs">Bio</Label><Textarea defaultValue="Leading enterprise asset operations at AssetFlow." rows={3} /></div>
                   </div>

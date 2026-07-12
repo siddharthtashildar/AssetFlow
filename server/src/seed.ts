@@ -15,10 +15,21 @@ async function main() {
   await prisma.auditCycle.deleteMany();
   await prisma.transferRequest.deleteMany();
   await prisma.allocation.deleteMany();
+  await prisma.booking.deleteMany();
   await prisma.asset.deleteMany();
   await prisma.assetCategory.deleteMany();
   await prisma.user.deleteMany();
   await prisma.department.deleteMany();
+
+  // 1.5 Create Departments
+  console.log("🏢 Creating mock departments...");
+  const deptIT = await prisma.department.create({ data: { name: "IT", code: "IT" } });
+  const deptHR = await prisma.department.create({ data: { name: "HR", code: "HR" } });
+  const deptFinance = await prisma.department.create({ data: { name: "Finance", code: "FIN" } });
+  const deptMarketing = await prisma.department.create({ data: { name: "Marketing", code: "MKT" } });
+  const deptOperations = await prisma.department.create({ data: { name: "Operations", code: "OPS" } });
+  const deptEngineering = await prisma.department.create({ data: { name: "Engineering", code: "ENG" } });
+  console.log("   ✅ Departments created.");
 
   // 2. Create Users
   console.log("👤 Creating mock users...");
@@ -30,6 +41,7 @@ async function main() {
       email: "admin@assetflow.io",
       password: hashedPassword,
       role: Role.ADMIN,
+      departmentId: deptIT.id,
     },
   });
 
@@ -39,6 +51,7 @@ async function main() {
       email: "manager@assetflow.io",
       password: hashedPassword,
       role: Role.ASSET_MANAGER,
+      departmentId: deptOperations.id,
     },
   });
 
@@ -48,6 +61,7 @@ async function main() {
       email: "john.doe@assetflow.io",
       password: hashedPassword,
       role: Role.EMPLOYEE,
+      departmentId: deptEngineering.id,
     },
   });
 
@@ -57,8 +71,14 @@ async function main() {
       email: "jane.smith@assetflow.io",
       password: hashedPassword,
       role: Role.EMPLOYEE,
+      departmentId: deptMarketing.id,
     },
   });
+
+  // Assign department heads
+  await prisma.department.update({ where: { id: deptIT.id }, data: { headId: admin.id } });
+  await prisma.department.update({ where: { id: deptOperations.id }, data: { headId: manager.id } });
+  await prisma.department.update({ where: { id: deptEngineering.id }, data: { headId: emp1.id } });
 
   console.log("   ✅ Users created.");
 
@@ -95,6 +115,7 @@ async function main() {
       acquisitionCost: 3499.00,
       acquisitionDate: new Date("2026-01-15"),
       location: "HQ - Floor 3",
+      departmentId: deptEngineering.id,
       isBookable: false,
     },
   });
@@ -110,6 +131,7 @@ async function main() {
       acquisitionCost: 1899.00,
       acquisitionDate: new Date("2026-02-10"),
       location: "HQ - Floor 5",
+      departmentId: deptMarketing.id,
       isBookable: false,
     },
   });
@@ -125,6 +147,7 @@ async function main() {
       acquisitionCost: 1199.00,
       acquisitionDate: new Date("2026-03-01"),
       location: "HQ - Floor 3",
+      departmentId: deptEngineering.id,
       isBookable: false,
     },
   });
@@ -140,6 +163,7 @@ async function main() {
       acquisitionCost: 1099.00,
       acquisitionDate: new Date("2026-03-05"),
       location: "HQ - Storage Room A",
+      departmentId: deptIT.id,
       isBookable: true,
     },
   });
@@ -155,6 +179,7 @@ async function main() {
       acquisitionCost: 799.00,
       acquisitionDate: new Date("2025-11-20"),
       location: "HQ - Storage Room B",
+      departmentId: deptOperations.id,
       isBookable: true,
     },
   });
@@ -170,6 +195,7 @@ async function main() {
       acquisitionCost: 1499.00,
       acquisitionDate: new Date("2026-01-05"),
       location: "HQ - Floor 2 Executive Office",
+      departmentId: deptHR.id,
       isBookable: false,
     },
   });

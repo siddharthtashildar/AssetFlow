@@ -390,9 +390,15 @@ export interface AuditCycleRecord {
 export interface DepartmentRecord {
   id: string;
   name: string;
+  code: string;
   status: string;
   parentDepartmentId: string | null;
   headId: string | null;
+  head?: { id: string; name: string; email?: string } | null;
+  _count?: {
+    users: number;
+    assets: number;
+  };
   createdAt: string;
 }
 
@@ -432,4 +438,24 @@ export async function closeAuditCycle(cycleId: string): Promise<AuditCycleRecord
 
 export async function getDepartments(): Promise<DepartmentRecord[]> {
   return request<DepartmentRecord[]>("/departments");
+}
+
+export async function createDepartment(payload: { name: string; code: string; headId?: string }): Promise<DepartmentRecord> {
+  return request<DepartmentRecord>("/departments", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateDepartment(id: string, payload: { name?: string; code?: string; headId?: string | null; status?: string }): Promise<DepartmentRecord> {
+  return request<DepartmentRecord>(`/departments/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteDepartment(id: string): Promise<{ success: boolean; id: string }> {
+  return request<{ success: boolean; id: string }>(`/departments/${id}`, {
+    method: "DELETE",
+  });
 }

@@ -21,9 +21,10 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   assets, maintenanceRequests, utilizationData, maintenanceTrends,
-  bookingTrends, departmentAllocation, notifications, bookings,
+  bookingTrends, notifications, bookings,
 } from "@/lib/mock-data";
-import { getCurrentUser } from "../lib/api";
+import { getCurrentUser, getDepartments } from "../lib/api";
+import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Dashboard · AssetFlow" }] }),
@@ -38,6 +39,16 @@ function Dashboard() {
   const recentAssets = assets.slice(0, 6);
   const recentMaint = maintenanceRequests.slice(0, 5);
   const upcomingReturns = assets.filter((a) => a.status === "allocated").slice(0, 4);
+
+  const { data: realDepartments = [] } = useQuery({
+    queryKey: ["departments"],
+    queryFn: getDepartments,
+  });
+
+  const departmentAllocation = realDepartments
+    .map((d) => ({ name: d.name, value: d._count?.assets || 0 }))
+    .filter(d => d.value > 0); // only show those with assets
+
 
   return (
     <>

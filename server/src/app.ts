@@ -7,6 +7,7 @@ import assetRoutes from "./routes/assetRoutes";
 import allocationRoutes from "./routes/allocationRoutes";
 import maintenanceRoutes from "./routes/maintenanceRoutes";
 import auditRoutes from "./routes/auditRoutes";
+import departmentRoutes from "./routes/departmentRoutes";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api", assetRoutes);
 app.use("/api", allocationRoutes);
 app.use("/api", maintenanceRoutes);
 app.use("/api", auditRoutes);
+app.use("/api", departmentRoutes);
 
 // Catch-all handler for unknown routes
 app.use((_req, res) => {

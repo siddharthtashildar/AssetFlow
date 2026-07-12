@@ -5,6 +5,7 @@ import "dotenv/config";
 import userRoutes from "./routes/userRoutes";
 import assetRoutes from "./routes/assetRoutes";
 import allocationRoutes from "./routes/allocationRoutes";
+import auditRoutes from "./routes/auditRoutes";
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api", userRoutes);
 app.use("/api", assetRoutes);
 app.use("/api", allocationRoutes);
+app.use("/api", auditRoutes);
 
 // Catch-all handler for unknown routes
 app.use((_req, res) => {

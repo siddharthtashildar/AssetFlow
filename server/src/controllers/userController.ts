@@ -25,6 +25,16 @@ export class UserController {
     }
   }
 
+  static async getDepartments(req: Request, res: Response) {
+    try {
+      const departments = await UserService.getDepartments();
+      res.status(200).json(departments);
+    } catch (error: any) {
+      console.error("Get departments error:", error.message);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
   static async signup(req: Request, res: Response) {
     try {
       const userCount = await prisma.user.count();

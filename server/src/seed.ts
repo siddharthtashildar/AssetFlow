@@ -5,13 +5,20 @@ import { Role, AssetStatus, AssetCondition, AllocationStatus, TransferStatus } f
 async function main() {
   console.log("🌱 Starting Database Seeding...");
 
-  // 1. Clean existing allocations, transfers, assets, categories, and users
+  // 1. Clean existing allocations, transfers, assets, categories, users, departments, and audit cycles
   console.log("🧹 Cleaning existing data...");
+  await prisma.notification.deleteMany();
+  await prisma.activityLog.deleteMany();
+  // Delete maintenance requests first because they reference assets
+  await prisma.maintenanceRequest.deleteMany();
+  await prisma.auditItem.deleteMany();
+  await prisma.auditCycle.deleteMany();
   await prisma.transferRequest.deleteMany();
   await prisma.allocation.deleteMany();
   await prisma.asset.deleteMany();
   await prisma.assetCategory.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.department.deleteMany();
 
   // 2. Create Users
   console.log("👤 Creating mock users...");

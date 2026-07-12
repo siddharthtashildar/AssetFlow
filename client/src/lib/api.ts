@@ -284,3 +284,63 @@ export interface UserRecord {
 export async function getUsers(): Promise<UserRecord[]> {
   return request<UserRecord[]>("/users");
 }
+
+// ----------------------------------------------------
+// MAINTENANCE ENDPOINTS
+// ----------------------------------------------------
+
+export interface MaintenanceRequestRecord {
+  id: string;
+  assetId: string;
+  asset: {
+    id: string;
+    name: string;
+    assetTag: string;
+    status: string;
+  };
+  raisedById: string;
+  raisedBy: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  description: string;
+  priority: string;
+  photoUrl: string | null;
+  status: string;
+  technician: string | null;
+  resolutionDetails: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getMaintenanceRequests(): Promise<MaintenanceRequestRecord[]> {
+  return request<MaintenanceRequestRecord[]>("/maintenance");
+}
+
+export async function createMaintenanceRequest(payload: {
+  assetId: string;
+  description: string;
+  priority: string;
+  photoUrl?: string;
+}): Promise<MaintenanceRequestRecord> {
+  return request<MaintenanceRequestRecord>("/maintenance", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateMaintenanceRequest(
+  id: string,
+  action: "APPROVE" | "REJECT" | "ASSIGN_TECHNICIAN" | "START_WORK" | "RESOLVE",
+  payload?: {
+    technician?: string;
+    resolutionDetails?: string;
+  }
+): Promise<MaintenanceRequestRecord> {
+  return request<MaintenanceRequestRecord>(`/maintenance/${id}/action`, {
+    method: "POST",
+    body: JSON.stringify({ action, ...payload }),
+  });
+}
+

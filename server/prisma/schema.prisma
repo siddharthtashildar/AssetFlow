@@ -9,6 +9,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 //////////////////////////////////////////////////////////
@@ -77,6 +78,7 @@ enum Priority {
   LOW
   MEDIUM
   HIGH
+  CRITICAL
 }
 
 enum AuditStatus {
@@ -88,6 +90,7 @@ enum AuditResult {
   VERIFIED
   MISSING
   DAMAGED
+  PENDING
 }
 
 enum NotificationType {
@@ -329,6 +332,7 @@ model MaintenanceRequest {
   status MaintenanceStatus @default(PENDING)
 
   technician String?
+  resolutionDetails String?
 
   createdAt DateTime @default(now())
 

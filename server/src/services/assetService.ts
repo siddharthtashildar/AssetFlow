@@ -125,6 +125,14 @@ export class AssetService {
             },
           },
         },
+        maintenanceRequests: {
+          orderBy: { createdAt: "desc" },
+          include: {
+            raisedBy: {
+              select: { name: true },
+            },
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });

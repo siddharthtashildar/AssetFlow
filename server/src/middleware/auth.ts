@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../utils/auth";
 import { Role } from "@prisma/client";
 
+import { prisma } from "../config/prisma";
+
 export interface AuthenticatedRequest extends Request {
   user?: {
     userId: string;
@@ -9,7 +11,7 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-export function authenticate(
+export async function authenticate(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
@@ -25,6 +27,17 @@ export function authenticate(
 
   if (!decoded) {
     res.status(401).json({ error: "Access token is expired or invalid" });
+    return;
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+    if (!user || !user.isActive) {
+      res.status(401).json({ error: "User session is invalid or user no longer exists" });
+      return;
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: "Database authentication verification failed" });
     return;
   }
 

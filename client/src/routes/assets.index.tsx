@@ -2,8 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   Plus, Download, Filter, Search, MoreHorizontal, Eye, Pencil, Trash2, QrCode,
-  ChevronLeft, ChevronRight, SlidersHorizontal, Boxes,
+  ChevronLeft, ChevronRight, SlidersHorizontal, Boxes, Wrench,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { PageHeader, PageBody } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
@@ -58,10 +65,13 @@ function AssetDirectory() {
         condition: a.condition.toLowerCase(),
         location: a.location ?? "Unknown",
         assignee: activeAlloc?.user?.name ?? null,
+        assigneeId: activeAlloc?.user?.id ?? null,
         department: "",
         cost: a.acquisitionCost ?? 0,
         purchaseDate: a.acquisitionDate ? new Date(a.acquisitionDate).toLocaleDateString() : "",
         shared: a.isBookable,
+        image: "📦",
+        maintenanceRequests: a.maintenanceRequests ?? [],
       };
     });
   }, [dbAssets]);
@@ -71,17 +81,21 @@ function AssetDirectory() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [cols, setCols] = useState<Set<string>>(new Set(ALL_COLS));
+  const [detailsAsset, setDetailsAsset] = useState<any>(null);
   const perPage = 8;
 
   const filtered = useMemo(() => {
     return assets.filter((a) => {
+      if (currentUser?.role === "EMPLOYEE" && a.assigneeId !== currentUser.id) {
+        return false;
+      }
       const q = query.toLowerCase();
       const okQ = !q || a.name.toLowerCase().includes(q) || a.tag.toLowerCase().includes(q) || (a.assignee ?? "").toLowerCase().includes(q);
       const okS = status === "all" || a.status === status;
       const okC = category === "all" || a.category === category;
       return okQ && okS && okC;
     });
-  }, [query, status, category]);
+  }, [query, status, category, assets, currentUser]);
 
   const paged = filtered.slice((page - 1) * perPage, page * perPage);
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
@@ -235,7 +249,9 @@ function AssetDirectory() {
                           <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem><Eye />View details</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setDetailsAsset(a)}>
+                            <Eye className="h-4 w-4 mr-2" />View details
+                          </DropdownMenuItem>
                           {canManage && <DropdownMenuItem><Pencil />Edit</DropdownMenuItem>}
                           <DropdownMenuItem><QrCode />Print label</DropdownMenuItem>
                           {canManage && (
@@ -268,6 +284,118 @@ function AssetDirectory() {
           </div>
         </Card>
       </PageBody>
+
+      {/* Asset Details Dialog */}
+      <Dialog open={!!detailsAsset} onOpenChange={() => setDetailsAsset(null)}>
+        <DialogContent className="sm:max-w-[550px] max-h-[85vh] overflow-y-auto">
+          {detailsAsset && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl">{detailsAsset.image || "📦"}</div>
+                  <div>
+                    <DialogTitle className="text-xl font-bold">{detailsAsset.name}</DialogTitle>
+                    <DialogDescription className="font-mono text-xs">{detailsAsset.tag}</DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="grid grid-cols-2 gap-4 py-4 border-y">
+                <div>
+                  <span className="text-xs text-muted-foreground block">Category</span>
+                  <span className="text-sm font-semibold">{detailsAsset.category}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block">Serial Number</span>
+                  <span className="text-sm font-semibold font-mono">{detailsAsset.serial || "—"}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block">Status</span>
+                  <div className="mt-0.5"><StatusBadge value={detailsAsset.status} /></div>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block">Condition</span>
+                  <div className="mt-0.5"><StatusBadge value={detailsAsset.condition} /></div>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block">Current Assignee</span>
+                  <span className="text-sm font-semibold">{detailsAsset.assignee || "Not Allocated"}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block">Location</span>
+                  <span className="text-sm font-semibold">{detailsAsset.location}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block">Cost</span>
+                  <span className="text-sm font-semibold">${detailsAsset.cost.toLocaleString()}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block">Purchase Date</span>
+                  <span className="text-sm font-semibold">{detailsAsset.purchaseDate || "—"}</span>
+                </div>
+              </div>
+
+              {/* Maintenance History */}
+              <div className="space-y-3 pt-2">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <Wrench className="h-4 w-4 text-primary" /> Maintenance History
+                </h3>
+
+                {detailsAsset.maintenanceRequests && detailsAsset.maintenanceRequests.length > 0 ? (
+                  <div className="space-y-3 max-h-[250px] overflow-y-auto pr-1">
+                    {detailsAsset.maintenanceRequests.map((req: any) => (
+                      <div key={req.id} className="p-3 rounded-lg border bg-muted/30 space-y-2 text-xs">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                              {req.id.slice(-6).toUpperCase()}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(req.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <StatusBadge value={req.priority.toLowerCase()} />
+                            <StatusBadge value={req.status.toLowerCase()} />
+                          </div>
+                        </div>
+
+                        <p className="text-foreground leading-relaxed font-medium text-[11px]">
+                          {req.description}
+                        </p>
+
+                        {(req.technician || req.resolutionDetails) && (
+                          <div className="pt-2 border-t border-dashed mt-1 space-y-1.5 text-[10px]">
+                            {req.technician && (
+                              <div>
+                                <span className="text-muted-foreground">Technician:</span> <strong>{req.technician}</strong>
+                              </div>
+                            )}
+                            {req.resolutionDetails && (
+                              <div className="bg-emerald-500/5 border border-emerald-500/10 p-1.5 rounded text-emerald-800 dark:text-emerald-300">
+                                <span className="font-semibold">Resolution:</span> "{req.resolutionDetails}"
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        <div className="text-[10px] text-muted-foreground flex items-center gap-1 pt-1 justify-between">
+                          <span>Raised by: <strong>{req.raisedBy?.name || "Unknown"}</strong></span>
+                          <span>Last updated: {new Date(req.updatedAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 border-2 border-dashed rounded-lg text-xs text-muted-foreground bg-muted/10">
+                    No maintenance history recorded for this asset.
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

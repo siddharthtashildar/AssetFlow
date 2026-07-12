@@ -87,6 +87,7 @@ enum AuditStatus {
 }
 
 enum AuditResult {
+  PENDING
   VERIFIED
   MISSING
   DAMAGED

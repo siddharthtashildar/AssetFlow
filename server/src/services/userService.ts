@@ -20,6 +20,12 @@ export class UserService {
     });
   }
 
+  static async getDepartments() {
+    return prisma.department.findMany({
+      orderBy: { name: "asc" },
+    });
+  }
+
   static async signup(data: any, requesterRole?: Role) {
     const { name, email, password, role } = data;
 

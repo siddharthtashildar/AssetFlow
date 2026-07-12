@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { getAssets, getAllocations, getCurrentUser } from "../lib/api";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/assets/")({
   head: () => ({ meta: [{ title: "Asset Directory · AssetFlow" }] }),
@@ -70,7 +71,9 @@ function AssetDirectory() {
         cost: a.acquisitionCost ?? 0,
         purchaseDate: a.acquisitionDate ? new Date(a.acquisitionDate).toLocaleDateString() : "",
         shared: a.isBookable,
-        image: "📦",
+        image: a.category?.name?.includes("Mobile") ? "📱" :
+               a.category?.name?.includes("Monitor") ? "🖥️" :
+               a.category?.name?.includes("Furniture") ? "🪑" : "💻",
         maintenanceRequests: a.maintenanceRequests ?? [],
       };
     });

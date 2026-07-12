@@ -129,8 +129,8 @@ function Departments() {
     const payload = {
       name,
       code,
-      headId: headId === "unassigned" ? null : headId,
-      parentDepartmentId: parentDepartmentId === "none" ? null : parentDepartmentId,
+      headId: (headId === "unassigned" ? null : headId) ?? undefined,
+      parentDepartmentId: (parentDepartmentId === "none" ? null : parentDepartmentId) ?? undefined,
     };
     
     if (editingDept) {

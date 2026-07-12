@@ -12,6 +12,7 @@ router.post("/auth/login", UserController.login);
 
 // Retrieve users - authenticated users
 router.get("/users", authenticate as any, UserController.getUsers);
+router.put("/users/profile", authenticate as any, UserController.updateProfile);
 
 // Admin-only user management routes
 router.post(

@@ -2,14 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Download, Filter, Calendar } from "lucide-react";
 import {
   BarChart, Bar, AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, RadialBarChart, RadialBar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 import { PageHeader, PageBody } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { utilizationData, maintenanceTrends, bookingTrends, departmentAllocation } from "@/lib/mock-data";
+import { useQuery } from "@tanstack/react-query";
+import { getAnalyticsSummary } from "../lib/api";
 
 export const Route = createFileRoute("/reports")({
   head: () => ({ meta: [{ title: "Reports & Analytics · AssetFlow" }] }),
@@ -18,19 +19,42 @@ export const Route = createFileRoute("/reports")({
 
 const C = ["#6366f1", "#10b981", "#f59e0b", "#0ea5e9", "#ec4899", "#8b5cf6", "#14b8a6", "#f43f5e"];
 
-const conditionData = [
-  { name: "Excellent", value: 528 },
-  { name: "Good", value: 412 },
-  { name: "Fair", value: 186 },
-  { name: "Poor", value: 34 },
-];
-
-const heatmap = Array.from({ length: 7 }, (_, day) => ({
-  day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][day],
-  values: Array.from({ length: 12 }, () => Math.floor(Math.random() * 40)),
-}));
-
 function Reports() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["analyticsSummary"],
+    queryFn: () => getAnalyticsSummary(),
+  });
+
+  if (isLoading) {
+    return (
+      <>
+        <PageHeader
+          title="Reports & Analytics"
+          description="Real-time insights across assets, bookings, maintenance and audits."
+        />
+        <PageBody>
+          <div className="flex h-60 items-center justify-center">
+            <p className="text-muted-foreground text-sm">Calculating reports & analytics metrics...</p>
+          </div>
+        </PageBody>
+      </>
+    );
+  }
+
+  // Fallback defaults in case backend structure returns empty
+  const utilizationData = data?.utilizationTrends || [];
+  const maintenanceTrends = data?.weeklyMaintenanceTrends || [];
+  const departmentAllocation = data?.departmentAllocation || [];
+  const bookingTrends = data?.bookingTrends || [];
+  const heatmap = data?.heatmap || [];
+
+  const conditionData = [
+    { name: "Excellent", value: data?.conditionCounts?.excellent || 0 },
+    { name: "Good", value: data?.conditionCounts?.good || 0 },
+    { name: "Fair", value: data?.conditionCounts?.fair || 0 },
+    { name: "Poor", value: data?.conditionCounts?.damaged || 0 },
+  ];
+
   return (
     <>
       <PageHeader
@@ -64,7 +88,7 @@ function Reports() {
 
           <TabsContent value="overview" className="mt-4 space-y-4">
             <div className="grid gap-4 lg:grid-cols-2">
-              <ChartCard title="Asset Utilization" desc="Trailing 7 months">
+              <ChartCard title="Asset Utilization" desc="Trailing 6 months">
                 <ResponsiveContainer width="100%" height={260}>
                   <AreaChart data={utilizationData}>
                     <defs>
@@ -79,7 +103,7 @@ function Reports() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="Maintenance Trends" desc="Opened vs resolved · 8 weeks">
+              <ChartCard title="Maintenance Trends" desc="Opened vs resolved · 6 weeks">
                 <ResponsiveContainer width="100%" height={260}>
                   <LineChart data={maintenanceTrends}>
                     <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.15} />
@@ -93,7 +117,7 @@ function Reports() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="Department Allocation" desc="Assets per department">
+              <ChartCard title="Department Allocation" desc="Active allocations per department">
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={departmentAllocation} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.15} horizontal={false} />
@@ -109,7 +133,7 @@ function Reports() {
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
                     <Pie data={conditionData} dataKey="value" innerRadius={60} outerRadius={95} paddingAngle={3} label>
-                      {conditionData.map((_, i) => <Cell key={i} fill={C[i]} />)}
+                      {conditionData.map((_, i) => <Cell key={i} fill={C[i % C.length]} />)}
                     </Pie>
                     <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
@@ -124,14 +148,14 @@ function Reports() {
                   <div className="grid grid-cols-[60px_repeat(12,minmax(0,1fr))] gap-1 text-[10px]">
                     <div />
                     {Array.from({ length: 12 }).map((_, i) => <div key={i} className="text-center text-muted-foreground tabular-nums">{i + 7}h</div>)}
-                    {heatmap.map((row) => (
+                    {heatmap.map((row: any) => (
                       <div key={row.day} className="contents">
                         <div className="text-muted-foreground text-right pr-2 flex items-center justify-end">{row.day}</div>
-                        {row.values.map((v, i) => (
+                        {row.values.map((v: number, i: number) => (
                           <div
                             key={i}
                             className="aspect-square rounded"
-                            style={{ background: `color-mix(in oklab, var(--primary) ${Math.min(90, v * 2.4)}%, transparent)` }}
+                            style={{ background: `color-mix(in oklab, var(--primary) ${Math.min(90, v * 15 || 5)}%, transparent)` }}
                             title={`${v} bookings`}
                           />
                         ))}
@@ -144,7 +168,7 @@ function Reports() {
           </TabsContent>
 
           <TabsContent value="assets" className="mt-4">
-            <ChartCard title="Asset Utilization" desc="Deep dive across categories">
+            <ChartCard title="Asset Status Split" desc="Active status segments">
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={utilizationData}>
                   <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.15} />
@@ -190,11 +214,11 @@ function Reports() {
           </TabsContent>
 
           <TabsContent value="departments" className="mt-4">
-            <ChartCard title="Department Asset Split" desc="Share of total inventory">
+            <ChartCard title="Department Asset Split" desc="Share of total active allocations">
               <ResponsiveContainer width="100%" height={320}>
                 <PieChart>
                   <Pie data={departmentAllocation} dataKey="value" nameKey="name" outerRadius={110} label>
-                    {departmentAllocation.map((_, i) => <Cell key={i} fill={C[i % C.length]} />)}
+                    {departmentAllocation.map((_: any, i: number) => <Cell key={i} fill={C[i % C.length]} />)}
                   </Pie>
                   <Tooltip contentStyle={tooltipStyle} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />

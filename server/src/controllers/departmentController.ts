@@ -79,7 +79,7 @@ export const updateDepartment = async (req: Request, res: Response) => {
     const data = updateDepartmentSchema.parse(req.body);
 
     const department = await prisma.department.update({
-      where: { id },
+      where: { id: id as string },
       data: {
         ...(data as any),
       },
@@ -112,13 +112,13 @@ export const deleteDepartment = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Department not found" });
     }
 
-    if (dept._count.users > 0 || dept._count.assets > 0) {
+    if ((dept as any)._count.users > 0 || (dept as any)._count.assets > 0) {
       return res.status(400).json({ 
         error: "Cannot delete department that has users or assets assigned. Reassign them first." 
       });
     }
 
-    await prisma.department.delete({ where: { id } });
+    await prisma.department.delete({ where: { id: id as string } });
     res.json({ success: true, id });
   } catch (error: any) {
     res.status(500).json({ error: "Failed to delete department", details: error.message });

@@ -538,3 +538,56 @@ export interface DashboardStatsResponse {
 export async function getDashboardStats(): Promise<DashboardStatsResponse> {
   return request<DashboardStatsResponse>("/dashboard/stats");
 }
+
+// ----------------------------------------------------
+// NOTIFICATIONS & PROFILE UPDATES
+// ----------------------------------------------------
+
+export interface NotificationRecord {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  link: string | null;
+}
+
+export async function updateProfile(payload: { name?: string; email?: string }): Promise<UserProfile> {
+  const result = await request<UserProfile>("/users/profile", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+
+  if (typeof window !== "undefined") {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      const updatedUser = { ...user, ...result };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+    }
+  }
+
+  return result;
+}
+
+export async function getNotifications(): Promise<NotificationRecord[]> {
+  return request<NotificationRecord[]>("/notifications");
+}
+
+export async function markAllNotificationsAsRead(): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>("/notifications/read-all", {
+    method: "POST",
+  });
+}
+
+export async function markNotificationAsRead(id: string): Promise<NotificationRecord> {
+  return request<NotificationRecord>(`/notifications/${id}/read`, {
+    method: "PATCH",
+  });
+}
+
+export async function getAnalyticsSummary(): Promise<any> {
+  return request<any>("/reports/summary");
+}
